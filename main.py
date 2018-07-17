@@ -1,7 +1,7 @@
 import string
 import sys
 from time import sleep
-from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool
 
 from helper import (
     login, 
@@ -9,13 +9,13 @@ from helper import (
     create_wordlist
 )
 
-pool = ThreadPool(processes=2)
+pool = Pool(processes=2)
 RUN = 0
 MAX_QUEUE_SIZE = 20
+host = '192.168.2.2'
+
 
 def main():
-
-    host = '192.168.2.2'
     username = 'admin'
     chars_set = string.digits
 
@@ -25,19 +25,27 @@ def main():
         while pool._taskqueue.qsize() >= MAX_QUEUE_SIZE:
             sleep(1)
         pool.apply_async(login, [host, username, password], callback=thread_callback)
+    pool.close()
+    pool.join()
 
 
 def thread_callback(result):
     response = result.get('response')
     username = result.get('username')
     password = result.get('password')
+
+    if response is None:
+        if pool._state == RUN:
+            pool.apply_async(login, [host, username, password], callback=thread_callback)
+        return None
+
     if is_success(response):
         print('{} passed !')
         print('------------------------------------')
         print('username:', username)
         print('password:', password)
         print('------------------------------------')
-        pool.terminate()
+        pool.close()
     else:
         print('{} not passed.'.format(password))
 
