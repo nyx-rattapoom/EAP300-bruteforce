@@ -8,7 +8,7 @@ from helper import (
     create_wordlist
 )
 
-pool = ThreadPool(processes=1)
+pool = ThreadPool(processes=2)
 RUN = 0
 
 def main():
