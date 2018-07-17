@@ -1,5 +1,6 @@
 import string
 import sys
+from time import sleep
 from multiprocessing.pool import ThreadPool
 
 from helper import (
@@ -10,16 +11,19 @@ from helper import (
 
 pool = ThreadPool(processes=2)
 RUN = 0
+MAX_QUEUE_SIZE = 20
 
 def main():
 
-    host = '192.168.1.1'
+    host = '192.168.2.2'
     username = 'admin'
     chars_set = string.digits
 
     for password in create_wordlist(chars_set, 1, 10):
         if pool._state != RUN:
             break
+        while pool._taskqueue.qsize() >= MAX_QUEUE_SIZE:
+            sleep(1)
         pool.apply_async(login, [host, username, password], callback=thread_callback)
 
 
